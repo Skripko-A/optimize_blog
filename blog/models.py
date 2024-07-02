@@ -15,8 +15,8 @@ class PostQuerySet(models.QuerySet):
         Когда вам нужно "сериализовать" объекты Post. С использованием popular().annotate
         вы получите время загрузки около 11 с. С данной фукцией - несколько сотен мс, ценой в 3 запроса.
         """
-        popular_posts_with_comments = Post.objects.filter(id__in=self).annotate(comments_count=Count('comments'))
-        return popular_posts_with_comments
+        popular_posts_with_comments_count = Post.objects.filter(id__in=self).annotate(comments_count=Count('comments'))
+        return popular_posts_with_comments_count
 
 
 class TagQuerySet(models.QuerySet):
