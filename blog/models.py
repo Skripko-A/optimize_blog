@@ -3,10 +3,20 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.db.models import Count
 
+
 class PostQuerySet(models.QuerySet):
-    def year(self, year):
-        posts_at_year = self.filter(published_at__year=year).order_by('published_at')
-        return posts_at_year
+    def popular(self):
+        popular_posts = Post.objects.annotate(likes_count=Count('likes')).order_by('-likes_count')
+        return popular_posts
+
+    def fetch_with_comments_count(self):
+        """ Функция позволяет получить QuerySet постов с указанием количества коментов к каждому посту
+
+        Когда вам нужно "сериализовать" объекты Post. С использованием popular().annotate
+        вы получите время загрузки около 11 с. С данной фукцией - несколько сотен мс, ценой в 3 запроса.
+        """
+        popular_posts_with_comments = Post.objects.filter(id__in=self).annotate(comments_count=Count('comments'))
+        return popular_posts_with_comments
 
 
 class TagQuerySet(models.QuerySet):
@@ -69,6 +79,7 @@ class Tag(models.Model):
         verbose_name_plural = 'теги'
 
     objects = TagQuerySet.as_manager()
+
 
 class Comment(models.Model):
     post = models.ForeignKey(
