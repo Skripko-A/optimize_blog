@@ -1,7 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 
 
 class PostQuerySet(models.QuerySet):
@@ -15,9 +15,16 @@ class PostQuerySet(models.QuerySet):
         Когда вам нужно "сериализовать" объекты Post. С использованием popular().annotate
         вы получите время загрузки около 11 с. С данной фукцией - несколько сотен мс, ценой в 3 запроса.
         """
-        popular_posts_with_comments_count = Post.objects.filter(id__in=self).annotate(comments_count=Count('comments'))
-        return popular_posts_with_comments_count
+        posts_with_comments_count = Post.objects.filter(id__in=self).annotate(comments_count=Count('comments'))
+        return posts_with_comments_count
 
+    def fresh_posts(self):
+        fresh_posts = Post.objects.annotate(comments_count=Count('comments')).order_by('-published_at')
+        return fresh_posts
+
+    def fetch_with_tags(self):
+        posts_with_tags = self.fetch_with_comments_count().prefetch_related('author', Prefetch('tags', queryset=Tag.objects.popular()))
+        return posts_with_tags
 
 class TagQuerySet(models.QuerySet):
     def popular(self):
