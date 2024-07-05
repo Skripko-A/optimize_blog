@@ -23,8 +23,8 @@ class PostQuerySet(models.QuerySet):
         return fresh_posts
 
     def fetch_with_tags(self):
-        posts_with_tags = self.fetch_with_comments_count().prefetch_related('author', Prefetch('tags',
-                                                                                               queryset=Tag.objects.popular()))
+        posts_with_tags = self.fetch_with_comments_count().prefetch_related(Prefetch('tags',
+                                                                                     queryset=Tag.objects.popular()))
         return posts_with_tags
 
 
@@ -112,5 +112,3 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'{self.author.username} under {self.post.title}'
-
-
