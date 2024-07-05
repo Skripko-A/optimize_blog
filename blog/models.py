@@ -23,8 +23,10 @@ class PostQuerySet(models.QuerySet):
         return fresh_posts
 
     def fetch_with_tags(self):
-        posts_with_tags = self.fetch_with_comments_count().prefetch_related('author', Prefetch('tags', queryset=Tag.objects.popular()))
+        posts_with_tags = self.fetch_with_comments_count().prefetch_related('author', Prefetch('tags',
+                                                                                               queryset=Tag.objects.popular()))
         return posts_with_tags
+
 
 class TagQuerySet(models.QuerySet):
     def popular(self):
@@ -54,38 +56,38 @@ class Post(models.Model):
         related_name='posts',
         verbose_name='Теги')
 
-    def __str__(self):
-        return self.title
-
-    def get_absolute_url(self):
-        return reverse('post_detail', args={'slug': self.slug})
+    objects = PostQuerySet.as_manager()
 
     class Meta:
         ordering = ['-published_at']
         verbose_name = 'пост'
         verbose_name_plural = 'посты'
 
-    objects = PostQuerySet.as_manager()
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse('post_detail', args={'slug': self.slug})
 
 
 class Tag(models.Model):
     title = models.CharField('Тег', max_length=20, unique=True)
 
-    def __str__(self):
-        return self.title
-
-    def clean(self):
-        self.title = self.title.lower()
-
-    def get_absolute_url(self):
-        return reverse('tag_filter', args={'tag_title': self.slug})
+    objects = TagQuerySet.as_manager()
 
     class Meta:
         ordering = ['title']
         verbose_name = 'тег'
         verbose_name_plural = 'теги'
 
-    objects = TagQuerySet.as_manager()
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse('tag_filter', args={'tag_title': self.slug})
+
+    def clean(self):
+        self.title = self.title.lower()
 
 
 class Comment(models.Model):
@@ -103,10 +105,12 @@ class Comment(models.Model):
     text = models.TextField('Текст комментария')
     published_at = models.DateTimeField('Дата и время публикации')
 
-    def __str__(self):
-        return f'{self.author.username} under {self.post.title}'
-
     class Meta:
         ordering = ['published_at']
         verbose_name = 'комментарий'
         verbose_name_plural = 'комментарии'
+
+    def __str__(self):
+        return f'{self.author.username} under {self.post.title}'
+
+
